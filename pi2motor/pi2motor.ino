@@ -3,10 +3,15 @@
 // Created by Lucas Malta on 19 July 2015 based on Dr. Monk GPS read
 // 
 // Control relies on passing along a sequence:
-// Usage1: $ENGINE,POS_SERVO_LFT,POS_SERVO_RHT,SPD_MOTOR_LFT,SPD_MOTOR_RHT\n
-// Usage2: $RESET\n
+//   Usage1: $ENGINE,POS_SERVO_LFT,POS_SERVO_RHT,SPD_MOTOR_LFT,SPD_MOTOR_RHT\n
+//   Usage2: $RESET\n (set all values to zero)
 //
-// Ex. in python: ser.write('$ENGINE,2000,1000,2000,2000\n')
+// Ranges:
+//   Servo position: -100 to 100
+//   Motor speed: 0 to 100
+//   --Note: values outside range will be capped
+//
+// Ex. in Python: ser.write('$ENGINE,-70, 70, 20, 100\n')
 
 #define MOTOR_L_PIN 10  // LEFT MOTOR control pin
 #define MOTOR_R_PIN 9   // RIGHT MOTOR control pin
