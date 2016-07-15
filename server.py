@@ -101,9 +101,20 @@ while stillrunning:
             ardu.write(commandsent)
             print("Sent command: " + commandsent)
             xbee.write("Sent commnd: " + commandsent)
+        except SerialException:
+            outputerror = {
+                'error' : { 'message' : 'Not able to send data to Arduino'},
+                'id': parsedcommand['id']
+                }
+            xbee.write(json.dumps(outputerror))
+            continue
+        try:
+            receivedstr = ardu.readline()
+            print("Arduino answered: " + commandsent)
+            xbee.write("Arduino answered: " + commandsent)
         except ValueError:
             outputerror = {
-                'error' : { 'message' : 'Not able to send to Arduino'},
+                'error' : { 'message' : 'Error reading from Arduino'},
                 'id': parsedcommand['id']
                 }
             xbee.write(json.dumps(outputerror))
