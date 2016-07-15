@@ -3,6 +3,7 @@ import sys
 import pprint
 import cmd
 import time
+import urwid
 
 ser = serial.Serial(sys.argv[1], 9600, timeout=1)
 
@@ -12,7 +13,23 @@ bytesToRead = ser.inWaiting()
 try:
     output = ser.read(bytesToRead)
 except ValueError:
-    print 'Nothing to read at start...'
+    #print 'Nothing to read at start...'
+
+def question():
+    return urwid.Pile([urwid.Edit(('I say', u"Enter command:\n"))])
+
+def answer(name):
+    ser.write(name + '\n')
+    time.sleep(.4)
+    bytesToRead = ser.inWaiting()
+    try:
+        output = ser.read(bytesToRead)
+    except ValueError:
+        print 'Did not manage to read output'
+        continue
+    return urwid.Text(('I say', output))
+
+
 
 while True:
     command = raw_input('>')
