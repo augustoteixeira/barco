@@ -1,5 +1,6 @@
 #include <Servo.h>
-// Servo/Motor control tool
+#include <SoftwareSerial.h>
+// Servo/Motor control tool + GPS display
 // Created by Lucas Malta on 19 July 2015 based on Dr. Monk GPS read
 // 
 // Control relies on passing along a sequence:
@@ -12,11 +13,14 @@
 //   --Note: values outside range will be capped
 //
 // Ex. in Python: ser.write('$ENGINE,-70, 70, 20, 100\n')
+//
+// GPS is diplayed from Pin 11
+//
 
 #define MOTOR_L_PIN 10  // LEFT MOTOR control pin
 #define MOTOR_R_PIN 9   // RIGHT MOTOR control pin
-#define SERVO_L_PIN 5   // LEFT SERVO control pin
-#define SERVO_R_PIN 6   // RIGHT SERVO control pin
+#define SERVO_L_PIN 6   // LEFT SERVO control pin
+#define SERVO_R_PIN 5   // RIGHT SERVO control pin
 #define MIN_MOTOR_SPD 700     // Minimum motor speed
 #define MAX_MOTOR_SPD 2200    // Maximum motor speed
 #define MIN_SERVO_POS 700     // Minimum servo angle
@@ -29,6 +33,14 @@ Servo mymotorR; // Right motor object
 
 const int sentenceSize = 80; // Max control sequence size
 char sentence[sentenceSize]; // Control sentence
+SoftwareSerial gpsSerial(11,10); // RX, TX (TX not used)
+
+int valSerL = 10;
+int valSerR = 10;
+int valEngL = 10;
+int valEngR = 10;
+float latS = -1;
+float longW = -1;
 
 void setup()
 {
@@ -37,6 +49,7 @@ void setup()
   mymotorL.attach(MOTOR_L_PIN); // attach pin to left motor
   
   Serial.begin(9600);
+  gpsSerial.begin(9600);
   Serial.println("Ready"); 
 }
 
@@ -44,6 +57,8 @@ void setup()
 void loop()
 {
   static int i = 0;
+
+  // Get USB serial data
   if (Serial.available())
   {
     //Serial.println("Available");
@@ -65,8 +80,33 @@ void loop()
   
   else
   {
-    //Serial.println("ERROR: Serial unavailable.");
+    //Serial.println("ERROR: USB Serial unavailable.");
   }
+
+  // Get GPS data
+  if (gpsSerial.available())
+  {
+    char ch = gpsSerial.read(); // Read NMEA sentence
+    if (ch != '\n' && i < sentenceSize)
+    {
+      sentence[i] = ch;
+      i++;
+    }
+   
+    else
+    {
+      //Serial.println(sentence);
+      sentence[i] = '\0';
+      i = 0;
+      displayParams();
+    }
+  }
+  
+  else
+  {
+   //Serial.println("GPS Serial not available. GPS disconnected?");
+  }
+  
 }
 
 
@@ -104,28 +144,24 @@ void displayParams()
       myservoR.attach(SERVO_R_PIN); // attach right servo
       myservoL.attach(SERVO_L_PIN); // attach left servo
   
-      Serial.print("Left servo position: ");
+      //Leftservo position
       getField(field, 1);   
-      int valSerL = constrain( atoi(field), -100, 100 );
-      Serial.println( valSerL );
+      valSerL = constrain( atoi(field), -100, 100 );
       myservoL.writeMicroseconds( map(valSerL, -100, 100, MIN_SERVO_POS, MAX_SERVO_POS ) );
       
-      Serial.print("Right servo position: ");
+      //Right servo position
       getField(field, 2); 
-      int valSerR = constrain( atoi(field), -100, 100 );
-      Serial.println( valSerR );
+      valSerR = constrain( atoi(field), -100, 100 );
       myservoR.writeMicroseconds( map(valSerR, -100, 100, MIN_SERVO_POS, MAX_SERVO_POS ) );
 
-      Serial.print("Left motor position: ");
+      //Left motor position
       getField(field, 3);   
-      int valEngL = constrain( atoi(field), 0, 100 );
-      Serial.println( valEngL );
+      valEngL = constrain( atoi(field), 0, 100 );
       mymotorL.writeMicroseconds( map(valEngL, 0, 100, MIN_MOTOR_SPD, MAX_MOTOR_SPD ) );
 
-      Serial.print("Right motor position: ");
+      //Right motor position
       getField(field, 4);   
-      int valEngR = constrain( atoi(field), 0, 100 );
-      Serial.println( valEngR );
+      valEngR = constrain( atoi(field), 0, 100 );
       mymotorR.writeMicroseconds( map(valEngR, 0, 100, MIN_MOTOR_SPD, MAX_MOTOR_SPD ) );
 
 
@@ -135,11 +171,42 @@ void displayParams()
       myservoL.detach();
       myservoR.detach();
   }
+  
+
+   // $GPRMC - Recommended minimum specific GPS/Transit data
+  else if (strcmp(field, "$GPRMC") == 0) 
+  {
+      //Lat
+      getField(field, 3);  // current lat 
+      latS = atof(field);
+      //getField(field, 4); // N/S
+
+      
+      //Long
+       getField(field, 5);  // current long
+       longW = atof(field);
+      //getField(field, 6);  // E/W
+  }
+
       
   else
   {
-    Serial.print("ERROR: No command found.");
+    //Serial.print("ERROR: No command found.");
   }
+
+  Serial.print(" Lat: ");
+  Serial.print(latS);
+  Serial.print(" Long: ");
+  Serial.print(longW);
+  Serial.print(" RServo: ");
+  Serial.print(valSerR);
+  Serial.print(" LServo: ");
+  Serial.print(valSerL);
+  Serial.print(" RMotor: ");
+  Serial.print(valEngR);
+  Serial.print(" LMotor: ");
+  Serial.print(valEngL);
+  Serial.print("\n");
   
   
 }
