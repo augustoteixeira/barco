@@ -5,6 +5,8 @@ from pygame.locals import *
 
 pygame.init()
 
+inter_message_time = 1
+
 color1 = pygame.Color(105,210,231)
 color2 = pygame.Color(167,219,216)
 color3 = pygame.Color(224,228,204)
@@ -34,6 +36,13 @@ state = {
     'sd' : 70
 }
 
+old_state = {
+    'me' : -1,
+    'md' : -1,
+    'se' : -1,
+    'sd' : -1
+}
+
 tradutor = {
     'me' : 'Motor esquerdo',
     'md' : 'Motor direito',
@@ -57,24 +66,41 @@ def putangle(name, angle, posx, posy):
     pygame.draw.rect(DISPLAYSURF, color5, (posx, posy - 20, 100, 140), 5)
 
 def putbar(name, size, posx, posy):
+    # size between 0 and 100
     puttext(name, (posx + 10, posy))
     puttext(str(size), (posx + 15, posy + 80))
     pygame.draw.rect(DISPLAYSURF, color4, (posx + 55, posy + 100, 10, -(size/2)))
     pygame.draw.rect(DISPLAYSURF, color5, (posx, posy - 20, 100, 140), 5)
 
+message_id = 0
 
-
-while True: # main game loop
-    DISPLAYSURF.fill(color1)
-    #textSurfaceObj = fontObj.render('Bla world!', True, color2, color3)
-    #textSurfaceObj.center(10, 10)
-
-    offset = 0
+def message(state, old_state):
+    # get modification in states
+    global message_id
+    output = []
     for key in state:
-        #puttext(" " + tradutor[key] + ": ", (100, 50 + offset))
-        #puttext(str(state[key]), (350, 50 + offset))
-        offset = offset + 20
+        if (state[key] != old_state[key]):
+            # output.append("{'s' : '" + key + "', 'v' : '" + str(state[key]) + "', 'id' : " + str(message_id) + " }")
+            output.append("{'s':'" + key + "','v':'" + str(state[key]) + "','id':" + str(message_id) + "}")
+            message_id += 1
+    return output
 
+current_time = pygame.time.get_ticks()
+
+while True:
+    DISPLAYSURF.fill(color1)
+
+    puttext("Arrow keys: control    c: -><-    d: <-->    v: /\\\\/    f: \\//\\", (5, 5))
+
+    # send modification in states
+    ellapsed_seconds = (pygame.time.get_ticks() - current_time) / 1000.0
+    if (ellapsed_seconds > inter_message_time):
+        mes = message(state, old_state)
+        for m in mes:
+            print(m)
+            for key in state:
+                old_state[key] = state[key]
+        current_time = pygame.time.get_ticks()
 
     putangle("Servo E", state['se'], 100, 150)
     putangle("Servo D", state['sd'], 250, 150)
@@ -96,20 +122,23 @@ while True: # main game loop
     if (keys[K_UP] and state['me'] < 100 and state['md'] < 100):
         state['me'] += 1
         state['md'] += 1
+    if (keys[K_c] and state['se'] < 100 and state['sd'] > 0):
+        state['se'] += 1
+        state['sd'] -= 1
+    if (keys[K_d] and state['se'] > 0 and state['sd'] < 100):
+        state['se'] -= 1
+        state['sd'] += 1
+    if (keys[K_v] and state['me'] < 100 and state['md'] > 0):
+        state['me'] += 1
+        state['md'] -= 1
+    if (keys[K_f] and state['me'] > 0 and state['md'] < 100):
+        state['me'] -= 1
+        state['md'] += 1
 
-    # DISPLAYSURF.blit(textSurfaceObj)
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
-
-            # if event.key == pygame.K_LEFT:
-            #     state['se'] -= 5
-            #     state['sd'] -= 5
-
-
-
-
 
     pygame.display.update()
 
