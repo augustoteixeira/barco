@@ -15,11 +15,11 @@ def get_serial_port():
 
 XBEE_BAUD = 9600
 XBEE_PORT = '/dev/ttyAMA0'
-XBEE_TIMEOUT = 10
+XBEE_TIMEOUT = 1
 
 ARDU_BAUD = 9600
 ARDU_PORT = get_serial_port()
-ARDU_TIMEOUT = 10
+ARDU_TIMEOUT = 1
 
 xbee = serial.Serial()   # open serial port
 xbee.baudrate = XBEE_BAUD
@@ -51,7 +51,7 @@ ardu.open()
 #print('ardu: name = ' + ardu.name + ', description = ' + ardu.description)         # check which port was really used
 
 #ardu.write(b'hello')     # write a string
-#sleep(.3)                # Delay for one tenth of a second
+sleep(1)                # Delay for one tenth of a second
 print ardu.readline()    # Read the newest output from the Arduino
 
 state = {
@@ -62,18 +62,23 @@ state = {
         }
 
 # commands to raspberrypi are json strings of the form
-# {'s' : 'me', 'v' : '20', 'id' : 708 }
+# {"s" : "me", "v" : "20", "id" : 708 }
 
 stillrunning = True
 
+xbeeMessage = ''
+
 while stillrunning:
+    if not xbeeMessage == '':
+        xbee.write(xbeeMessage)
+        xbeeMessage = ''
+
     # get next command from xbee
     nextcommand = xbee.readline()
     #xbee.write(b'hello\n')
     #print("A")
-    #time.sleep(1)
     if not nextcommand == '':
-        xbee.write("Received: " + nextcommand)
+        xbeeMessage += "Received: " + nextcommand + "\n"
         print("Received: " + nextcommand)
         try:
             parsedcommand = json.loads(nextcommand)
@@ -84,59 +89,60 @@ while stillrunning:
                 'error': { 'message': 'Parse Error for message: ' + nextcommand },
                 'id': None
                 }
-            xbee.write(json.dumps(outputerror))
+            xbeeMessage += json.dumps(outputerror) + "\n"
             continue
         if not 's' in parsedcommand:
             outputerror = {
                 'error': { 'message': 'No state' },
                 'id': None
                 }
-            xbee.write(json.dumps(outputerror))
+            xbeeMessage += json.dumps(outputerror) + "\n"
             continue
         if not 'v' in parsedcommand:
             outputerror = {
                 'error': { 'message': 'No value' },
                 'id': None
                 }
-            xbee.write(json.dumps(outputerror))
+            xbeeMessage += json.dumps(outputerror) + "\n"
             continue
         if not 'id' in parsedcommand:
             outputerror = {
                 'error': { 'message': 'No id' },
                 'id': None
                 }
-            xbee.write(json.dumps(outputerror))
+            xbeeMessage += json.dumps(outputerror) + "\n"
             continue
         if not parsedcommand['s'] in state:
             outputerror = {
                 'error': { 'message': 'State not found: ' + nextcommand['s'] },
                 'id': None
                 }
-            xbee.write(json.dumps(outputerror))
+            xbeeMessage += json.dumps(outputerror) + "\n"
             continue
         state[parsedcommand['s']] = parsedcommand['v']
         commandsent = '$ENGINE,' + str(state['se']) + ',' + str(state['sd']) + ',' + str(state['me']) + ',' + str(state['md']) + '\n'
         try:
             ardu.write(commandsent)
             print("Sent command: " + commandsent)
-            xbee.write("Sent commnd: " + commandsent)
-        except SerialException:
+            time.sleep(.4)
+            xbeeMessage += "Sent commnd: " + commandsent + "\n"
+        except serial.SerialException:
             outputerror = {
                 'error' : { 'message' : 'Not able to send data to Arduino'},
                 'id': parsedcommand['id']
                 }
-            xbee.write(json.dumps(outputerror))
+            xbeeMessage += json.dumps(outputerror) + "\n"
             continue
         try:
             receivedstr = ardu.readline()
-            print("Arduino answered: " + commandsent)
-            xbee.write("Arduino answered: " + commandsent)
-        except ValueError:
+            print("Arduino answered: " + receivedstr)
+            xbeeMessage += "Arduino answered: " + receivedstr + "\n"
+        except serial.SerialException:
             outputerror = {
                 'error' : { 'message' : 'Error reading from Arduino'},
                 'id': parsedcommand['id']
                 }
-            xbee.write(json.dumps(outputerror))
+            xbeeMessage += json.dumps(outputerror) + "\n"
             continue
         outputerror = {
             'result': 'done',
