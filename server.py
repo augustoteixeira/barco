@@ -2,6 +2,7 @@ import os
 import json
 import serial
 import pprint
+import time
 pp = pprint.PrettyPrinter(indent=4)
 
 
@@ -14,11 +15,11 @@ def get_serial_port():
 
 XBEE_BAUD = 9600
 XBEE_PORT = '/dev/ttyAMA0'
-XBEE_TIMEOUT = 1
+XBEE_TIMEOUT = 10
 
 ARDU_BAUD = 9600
 ARDU_PORT = get_serial_port()
-ARDU_TIMEOUT = 1
+ARDU_TIMEOUT = 10
 
 xbee = serial.Serial()   # open serial port
 xbee.baudrate = XBEE_BAUD
@@ -30,7 +31,21 @@ ardu = serial.Serial()   # open serial port
 ardu.baudrate = ARDU_BAUD
 ardu.port = ARDU_PORT
 ardu.timeout = ARDU_TIMEOUT
+
+# fake interface
+class fake(object):
+    def __init__(self):
+        print("a")
+    def write(a):
+        print(a)
+    def readline():
+        return ""
+
+#ardu = fake()
+
+# true arduino
 ardu.open()
+
 
 #print('xbee: name = ' + xbee.name + ', description = ' + xbee.description)         # check which port was really used
 #print('ardu: name = ' + ardu.name + ', description = ' + ardu.description)         # check which port was really used
@@ -38,8 +53,6 @@ ardu.open()
 #ardu.write(b'hello')     # write a string
 #sleep(.3)                # Delay for one tenth of a second
 print ardu.readline()    # Read the newest output from the Arduino
-
-stillrunning = True
 
 state = {
         'me' : 0,
@@ -51,11 +64,17 @@ state = {
 # commands to raspberrypi are json strings of the form
 # {'s' : 'me', 'v' : '20', 'id' : 708 }
 
+stillrunning = True
+
 while stillrunning:
     # get next command from xbee
     nextcommand = xbee.readline()
+    #xbee.write(b'hello\n')
+    #print("A")
+    #time.sleep(1)
     if not nextcommand == '':
-        print("Received" + nextcommand)
+        xbee.write("Received: " + nextcommand)
+        print("Received: " + nextcommand)
         try:
             parsedcommand = json.loads(nextcommand)
             print("Parsed to:")
