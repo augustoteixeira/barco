@@ -11,7 +11,21 @@ from time import sleep
 def get_serial_port():
     return "/dev/"+os.popen("dmesg | egrep ttyACM | cut -f3 -d: | tail -n1").read().strip()
 
+state = {
+        'me' : 0,
+        'md' : 0,
+        'se' : 0,
+        'sd' : 0
+        }
 
+class JsonRpc(pyjsonrpc.JsonRpc):
+
+    @pyjsonrpc.rpcmethod
+    def set(self, dict):
+        """ Receives a dict like { "se" : 10, "me" : 20} and updates state """
+        global state
+        for key in dict:
+            state[key] = dict[key]
 
 XBEE_BAUD = 9600
 XBEE_PORT = '/dev/ttyAMA0'
@@ -27,56 +41,56 @@ xbee.port = XBEE_PORT
 xbee.timeout = XBEE_TIMEOUT
 xbee.open()
 
+# fake interface
+#class fake(object):
+#    def __init__(self):
+#        print("a")
+#    def write(a):
+#        print(a)
+#    def readline():
+#        return ""
+#ardu = fake()
+
 ardu = serial.Serial()   # open serial port
 ardu.baudrate = ARDU_BAUD
 ardu.port = ARDU_PORT
 ardu.timeout = ARDU_TIMEOUT
-
-# fake interface
-class fake(object):
-    def __init__(self):
-        print("a")
-    def write(a):
-        print(a)
-    def readline():
-        return ""
-
-#ardu = fake()
-
-# true arduino
 ardu.open()
 
-
-#print('xbee: name = ' + xbee.name + ', description = ' + xbee.description)         # check which port was really used
-#print('ardu: name = ' + ardu.name + ', description = ' + ardu.description)         # check which port was really used
-
-#ardu.write(b'hello')     # write a string
 sleep(1)                # Delay for one tenth of a second
 print ardu.readline()    # Read the newest output from the Arduino
-
-state = {
-        'me' : 0,
-        'md' : 0,
-        'se' : 0,
-        'sd' : 0
-        }
-
-# commands to raspberrypi are json strings of the form
-# {"s" : "me", "v" : "20", "id" : 708 }
 
 stillrunning = True
 
 xbeeMessage = ''
 
 while stillrunning:
-    if not xbeeMessage == '':
-        xbee.write(xbeeMessage)
-        xbeeMessage = ''
 
     # get next command from xbee
     nextcommand = xbee.readline()
     #xbee.write(b'hello\n')
     #print("A")
+
+    if not nextcommand == '':
+        response_json = rpc.call(nextcommand)
+
+        print(nextcommand)
+        print(response_json)
+        time.sleep(.5)
+
+
+
+xbee.close()             # close port
+ardu.close()             # close port
+
+
+import sys
+sys.exit()
+
+    if not xbeeMessage == '':
+        xbee.write(xbeeMessage)
+        xbeeMessage = ''
+
     if not nextcommand == '':
         xbeeMessage += "Received: " + nextcommand + "\n"
         print("Received: " + nextcommand)
@@ -149,13 +163,5 @@ while stillrunning:
             'error' : None,
             'id': parsedcommand['id']
             }
-            
-xbee.close()             # close port
-ardu.close()             # close port
-
-
-
-
-
 
 

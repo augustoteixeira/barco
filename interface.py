@@ -1,7 +1,36 @@
 import pygame
 import sys
 import math
+import serial
+import os
+import time
 from pygame.locals import *
+
+import pyjsonrpc
+
+class JsonRpc(pyjsonrpc.JsonRpc):
+
+    @pyjsonrpc.rpcmethod
+    def set(self, dict):
+        """ Receives a dict like { "se" : 10, "me" : 20} and updates state """
+        global state
+        for key in dict:
+            state[key] = dict[key]
+
+state = {
+    'me' : 30,
+    'md' : 80,
+    'se' : 40,
+    'sd' : 70
+}
+
+rpc = JsonRpc()
+
+
+def get_serial_port():
+    return "/dev/" + os.popen("dmesg | egrep ttyUSB | rev | cut -c -7 | rev | head -n 1").read().strip()
+
+ser = serial.Serial(get_serial_port(), 9600, timeout=1)
 
 pygame.init()
 
@@ -28,13 +57,6 @@ width = 800
 
 DISPLAYSURF = pygame.display.set_mode((width, height))
 pygame.display.set_caption('Interface barco')
-
-state = {
-    'me' : 30,
-    'md' : 80,
-    'se' : 40,
-    'sd' : 70
-}
 
 old_state = {
     'me' : -1,
@@ -72,17 +94,14 @@ def putbar(name, size, posx, posy):
     pygame.draw.rect(DISPLAYSURF, color4, (posx + 55, posy + 100, 10, -(size/2)))
     pygame.draw.rect(DISPLAYSURF, color5, (posx, posy - 20, 100, 140), 5)
 
-message_id = 0
-
 def message(state, old_state):
     # get modification in states
-    global message_id
-    output = []
+    output = {}
     for key in state:
         if (state[key] != old_state[key]):
             # output.append("{'s' : '" + key + "', 'v' : '" + str(state[key]) + "', 'id' : " + str(message_id) + " }")
-            output.append("{'s':'" + key + "','v':'" + str(state[key]) + "','id':" + str(message_id) + "}")
-            message_id += 1
+            output[key] = state[key]
+            old_state[key] = state[key]
     return output
 
 current_time = pygame.time.get_ticks()
@@ -95,11 +114,27 @@ while True:
     # send modification in states
     ellapsed_seconds = (pygame.time.get_ticks() - current_time) / 1000.0
     if (ellapsed_seconds > inter_message_time):
-        mes = message(state, old_state)
-        for m in mes:
-            print(m)
-            for key in state:
-                old_state[key] = state[key]
+        changes = message(state, old_state)
+        if bool(changes):
+            request = pyjsonrpc.create_request_json("set", changes)
+            print request
+
+        # mes = message(state, old_state)
+        # for m in mes:
+        #     ser.write(m + '\n')
+        #     time.sleep(.8)
+        #     for key in state:
+        #         old_state[key] = state[key]
+
+        bytesToRead = ser.inWaiting()
+        try:
+            output = ser.read(bytesToRead)
+            #output = ser.readline()
+        except ValueError:
+            print 'Did not manage to read output'
+            continue
+        # print output
+
         current_time = pygame.time.get_ticks()
 
     putangle("Servo E", state['se'], 100, 150)

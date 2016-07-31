@@ -1,3 +1,4 @@
+import os
 import serial
 import sys
 import pprint
@@ -5,7 +6,10 @@ import cmd
 import time
 import urwid
 
-ser = serial.Serial(sys.argv[1], 9600, timeout=10)
+def get_serial_port():
+    return "/dev/" + os.popen("dmesg | egrep ttyUSB | rev | cut -c -7 | rev | head -n 1").read().strip()
+
+ser = serial.Serial(get_serial_port(), 9600, timeout=1)
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -20,7 +24,7 @@ def question():
 
 def answer(name):
     ser.write(name + '\n')
-    time.sleep(.4)
+    time.sleep(.8)
     bytesToRead = ser.inWaiting()
     try:
         output = ser.read(bytesToRead)
@@ -39,7 +43,7 @@ while True:
     if command == 'exit':
         break
     ser.write(command + '\n')
-    time.sleep(.4)
+    time.sleep(.8)
     bytesToRead = ser.inWaiting()
     print(bytesToRead)
     try:
@@ -49,7 +53,7 @@ while True:
         print 'Did not manage to read output'
         continue
 
-    print "<" + output
+    print output
 
 ser.close()
 
