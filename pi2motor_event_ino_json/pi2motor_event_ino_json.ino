@@ -3,14 +3,19 @@
   MR: motor on the right
   ML: motor on the left
   SR: servo on the right
-  SE: servo on the left
+  SL: servo on the left
 
   Control sequence example: {"MR":"70", "ML":"70", "SR":"-20", "SL":"-30"}\n
   The "\n" at the end is necessary so that serial knows when to stop reading.
 
   This file also continuously obtain GPS data.
 
-  ___________________________
+
+  TODO
+	1. Find the right delay time before detaching servos
+
+
+  ##############################
   CREATED BY: Lucas Malta
   DATE: 6 August 2016
 
@@ -93,7 +98,6 @@ void loop() {
 
 void displayParams()
 {
-
 	// Parse JSON data
 	char* value;
 	char jsonString[sentenceSize];
@@ -139,7 +143,7 @@ void displayParams()
 
 	// Avoid noise on servos for trying to hold position
 	// Motors should NOT be dettached though...
-	delay(100); // wait for servo to get there
+	delay(1000); // wait for servo to get there
 	myservoL.detach();
 	myservoR.detach();
 
