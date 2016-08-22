@@ -12,16 +12,16 @@ class JsonRpc(pyjsonrpc.JsonRpc):
 
     @pyjsonrpc.rpcmethod
     def set(self, dict):
-        """ Receives a dict like { "se" : 10, "me" : 20} and updates state """
+        """ Receives a dict like { "SL" : 10, "ML" : 20} and updates state """
         global state
         for key in dict:
             state[key] = dict[key]
 
 state = {
-    'me' : 30,
-    'md' : 80,
-    'se' : 40,
-    'sd' : 70
+    'ml' : 30,
+    'mr' : 80,
+    'sl' : 40,
+    'sr' : 70
 }
 
 rpc = JsonRpc()
@@ -34,7 +34,7 @@ ser = serial.Serial(get_serial_port(), 9600, timeout=1)
 
 pygame.init()
 
-inter_message_time = 1
+inter_message_time = .2
 
 color1 = pygame.Color(105,210,231)
 color2 = pygame.Color(167,219,216)
@@ -52,24 +52,24 @@ clock = pygame.time.Clock()
 
 font = pygame.font.Font('paraaminobenzoic.ttf', 20)
 
-height = 500
-width = 800
+height = 650
+width = 1000
 
 DISPLAYSURF = pygame.display.set_mode((width, height))
 pygame.display.set_caption('Interface barco')
 
 old_state = {
-    'me' : -1,
-    'md' : -1,
-    'se' : -1,
-    'sd' : -1
+    'ml' : -1,
+    'mr' : -1,
+    'sl' : -1,
+    'sr' : -1
 }
 
 tradutor = {
-    'me' : 'Motor esquerdo',
-    'md' : 'Motor direito',
-    'se' : 'Servo esquerdo',
-    'sd' : 'Servo direito'
+    'ml' : 'Motor esquerdo',
+    'mr' : 'Motor direito',
+    'sl' : 'Servo esquerdo',
+    'sr' : 'Servo direito'
 }
 
 def puttext(string, pos):
@@ -105,6 +105,8 @@ def message(state, old_state):
     return output
 
 current_time = pygame.time.get_ticks()
+received_buffer = "\n\n\n"
+sent_buffer = "\n\n\n"
 
 while True:
     DISPLAYSURF.fill(color1)
@@ -116,59 +118,62 @@ while True:
     if (ellapsed_seconds > inter_message_time):
         changes = message(state, old_state)
         if bool(changes):
-            request = pyjsonrpc.create_request_json("set", changes)
-            print request
-
-        # mes = message(state, old_state)
-        # for m in mes:
-        #     ser.write(m + '\n')
-        #     time.sleep(.8)
-        #     for key in state:
-        #         old_state[key] = state[key]
+            request = pyjsonrpc.create_request_json("set", changes) + "\n"
+            ser.write(request)
+            sent_buffer += request
 
         bytesToRead = ser.inWaiting()
         try:
             output = ser.read(bytesToRead)
-            #output = ser.readline()
         except ValueError:
             print 'Did not manage to read output'
             continue
-        # print output
+        if output != "":
+            received_buffer += output + "\n"
 
         current_time = pygame.time.get_ticks()
 
-    putangle("Servo E", state['se'], 100, 150)
-    putangle("Servo D", state['sd'], 250, 150)
+    temp = sent_buffer.split('\n')
+    puttext("Last sent", (30, 450))
+    puttext(temp[-3], (50, 470))
+    puttext(temp[-2], (50, 490))
+    temp = received_buffer.split('\n')
+    puttext("Last received", (30, 530))
+    puttext(temp[-3], (50, 550))
+    puttext(temp[-2], (50, 570))
 
-    putbar("Motor E", state['me'], 100, 300)
-    putbar("Motor D", state['md'], 250, 300)
+    putangle("Servo E", state['sl'], 100, 150)
+    putangle("Servo D", state['sr'], 250, 150)
+
+    putbar("Motor E", state['ml'], 100, 300)
+    putbar("Motor D", state['mr'], 250, 300)
 
     clock.tick(20)
     keys = pygame.key.get_pressed()
-    if (keys[K_LEFT] and state['se'] > 0 and state['sd'] > 0):
-        state['se'] -= 1
-        state['sd'] -= 1
-    if (keys[K_RIGHT] and state['se'] < 100 and state['sd'] < 100):
-        state['se'] += 1
-        state['sd'] += 1
-    if (keys[K_DOWN] and state['me'] > 0 and state['md'] > 0):
-        state['me'] -= 1
-        state['md'] -= 1
-    if (keys[K_UP] and state['me'] < 100 and state['md'] < 100):
-        state['me'] += 1
-        state['md'] += 1
-    if (keys[K_c] and state['se'] < 100 and state['sd'] > 0):
-        state['se'] += 1
-        state['sd'] -= 1
-    if (keys[K_d] and state['se'] > 0 and state['sd'] < 100):
-        state['se'] -= 1
-        state['sd'] += 1
-    if (keys[K_v] and state['me'] < 100 and state['md'] > 0):
-        state['me'] += 1
-        state['md'] -= 1
-    if (keys[K_f] and state['me'] > 0 and state['md'] < 100):
-        state['me'] -= 1
-        state['md'] += 1
+    if (keys[K_LEFT] and state['sl'] > 0 and state['sr'] > 0):
+        state['sl'] -= 1
+        state['sr'] -= 1
+    if (keys[K_RIGHT] and state['sl'] < 100 and state['sr'] < 100):
+        state['sl'] += 1
+        state['sr'] += 1
+    if (keys[K_DOWN] and state['ml'] > 0 and state['mr'] > 0):
+        state['ml'] -= 1
+        state['mr'] -= 1
+    if (keys[K_UP] and state['ml'] < 100 and state['mr'] < 100):
+        state['ml'] += 1
+        state['mr'] += 1
+    if (keys[K_c] and state['sl'] < 100 and state['sr'] > 0):
+        state['sl'] += 1
+        state['sr'] -= 1
+    if (keys[K_d] and state['sl'] > 0 and state['sr'] < 100):
+        state['sl'] -= 1
+        state['sr'] += 1
+    if (keys[K_v] and state['ml'] < 100 and state['mr'] > 0):
+        state['ml'] += 1
+        state['mr'] -= 1
+    if (keys[K_f] and state['ml'] > 0 and state['mr'] < 100):
+        state['ml'] -= 1
+        state['mr'] += 1
 
     for event in pygame.event.get():
         if event.type == QUIT:
