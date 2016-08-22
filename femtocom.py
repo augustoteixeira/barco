@@ -4,12 +4,12 @@ import sys
 import pprint
 import cmd
 import time
-import urwid
+# import urwid
 
 def get_serial_port():
-    return "/dev/" + os.popen("dmesg | egrep ttyUSB | rev | cut -c -7 | rev | head -n 1").read().strip()
+    return "/dev/" + os.popen("dmesg | egrep ttyACM | rev | cut -c -7 | rev | head -n 1").read().strip()
 
-ser = serial.Serial(get_serial_port(), 9600, timeout=1)
+ser = serial.Serial(sys.argv[1], 9600, timeout=1)
 
 pp = pprint.PrettyPrinter(indent=4)
 
