@@ -1,10 +1,12 @@
 import os
 import json
+import yaml
 import serial
 import pprint
 import time
 pp = pprint.PrettyPrinter(indent=4)
 
+import pyjsonrpc
 
 from time import sleep
 
@@ -12,28 +14,30 @@ def get_serial_port():
     return "/dev/"+os.popen("dmesg | egrep ttyACM | cut -f3 -d: | tail -n1").read().strip()
 
 state = {
-        'me' : 0,
-        'md' : 0,
-        'se' : 0,
-        'sd' : 0
+        'ml' : 100,
+        'mr' : 100,
+        'sl' : 100,
+        'sr' : 100
         }
 
 class JsonRpc(pyjsonrpc.JsonRpc):
 
     @pyjsonrpc.rpcmethod
     def set(self, dict):
-        """ Receives a dict like { "se" : 10, "me" : 20} and updates state """
+        """ Receives a dict like { "sl" : 10, "ml" : 20} and updates state """
         global state
         for key in dict:
             state[key] = dict[key]
 
+rpc = JsonRpc()
+
 XBEE_BAUD = 9600
 XBEE_PORT = '/dev/ttyAMA0'
-XBEE_TIMEOUT = 1
+XBEE_TIMEOUT = 10
 
 ARDU_BAUD = 9600
-ARDU_PORT = get_serial_port()
-ARDU_TIMEOUT = 1
+ARDU_PORT = '/dev/ttyACM1' # get_serial_port()
+ARDU_TIMEOUT = 10
 
 xbee = serial.Serial()   # open serial port
 xbee.baudrate = XBEE_BAUD
@@ -55,10 +59,21 @@ ardu = serial.Serial()   # open serial port
 ardu.baudrate = ARDU_BAUD
 ardu.port = ARDU_PORT
 ardu.timeout = ARDU_TIMEOUT
+#try:
 ardu.open()
+#except serial.SerialException:
+#    ardu = xbee
 
-sleep(1)                # Delay for one tenth of a second
-print ardu.readline()    # Read the newest output from the Arduino
+
+sleep(1)                # Delay for one second
+
+bytesToRead = ardu.inWaiting()
+try:
+    print(ardu.read(bytesToRead))
+except ValueError:
+    print 'Did not manage to read output'
+
+#print ardu.readline()    # Read the newest output from the Arduino
 
 stillrunning = True
 
@@ -72,11 +87,27 @@ while stillrunning:
     #print("A")
 
     if not nextcommand == '':
+        #a = yaml.safe_load(nextcommand)
+        #print(a)
         response_json = rpc.call(nextcommand)
 
-        print(nextcommand)
-        print(response_json)
-        time.sleep(.5)
+        #print(json.dumps(state))
+        b = '{"sl":"'+str(state["sl"])+'","sr":"'+str(state["sr"])+'","ml":"'+str(state["ml"])+'","mr":"'+str(state["mr"])+'"}'
+        ardu.write(b + "\n")
+        print(b)
+	#sleep(1)
+
+        #bytesToRead = ardu.inWaiting()
+        #try:
+        #    output = ardu.read(bytesToRead)
+        #except ValueError:
+        #    print 'Did not manage to read output'
+        #    continue
+        output = ardu.readline()
+
+	xbee.write(output)
+        xbee.write(response_json)
+        time.sleep(.2)
 
 
 
@@ -87,6 +118,7 @@ ardu.close()             # close port
 import sys
 sys.exit()
 
+while True:
     if not xbeeMessage == '':
         xbee.write(xbeeMessage)
         xbeeMessage = ''
