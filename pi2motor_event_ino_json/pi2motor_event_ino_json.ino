@@ -5,19 +5,18 @@
   SR: servo on the right
   SL: servo on the left
 
-  Control sequence example: {"MR":"70", "ML":"70", "SR":"-20", "SL":"-30"}\n
+  Control sequence example: {"mr":"70", "ml":"70", "sr":"-20", "sl":"-30"}\n
   The "\n" at the end is necessary so that serial knows when to stop reading.
 
   This file also continuously obtain GPS data.
 
 
-  TODO
-	1. Find the right delay time before detaching servos
+  TODO:
 
 
   ##############################
   CREATED BY: Lucas Malta
-  DATE: 6 August 2016
+  DATE: 22 August 2016
 
 */
 
@@ -65,6 +64,11 @@ void setup() {
 	mymotorR.attach(MOTOR_R_PIN); // Attach pin to right motor
 	mymotorL.attach(MOTOR_L_PIN); // Attach pin to left motor
 
+        // Connect to servos/motors
+	myservoR.attach(SERVO_R_PIN); // attach right servo
+	myservoL.attach(SERVO_L_PIN); // attach left servo
+
+
 	// Initialize serial:
 	Serial.begin(9600);
 	gpsSerial.begin(9600);
@@ -77,7 +81,7 @@ void setup() {
 void loop() {
 	// Print the string when a newline arrives:
 	if (stringComplete) {
-		Serial.println(inputString);
+		//Serial.println(inputString);
 
 		// Reads data and execute command
 		displayParams();
@@ -109,10 +113,10 @@ void displayParams()
 		return;
 	}
 
-	aJsonObject* MR = aJson.getObjectItem(root, "MR");  
-	aJsonObject* ML = aJson.getObjectItem(root, "ML");
-	aJsonObject* SR = aJson.getObjectItem(root, "SR"); 
-	aJsonObject* SL = aJson.getObjectItem(root, "SL"); 
+	aJsonObject* MR = aJson.getObjectItem(root, "mr");  
+	aJsonObject* ML = aJson.getObjectItem(root, "ml");
+	aJsonObject* SR = aJson.getObjectItem(root, "sr"); 
+	aJsonObject* SL = aJson.getObjectItem(root, "sl"); 
        
 	if (!MR | !ML | !SR | !SL) {
 		Serial.println("Invalid command format. Missing input?");
@@ -121,8 +125,8 @@ void displayParams()
 
 
 	// Connect to servos/motors
-	myservoR.attach(SERVO_R_PIN); // attach right servo
-	myservoL.attach(SERVO_L_PIN); // attach left servo
+	//myservoR.attach(SERVO_R_PIN); // attach right servo
+	//myservoL.attach(SERVO_L_PIN); // attach left servo
 
 	//Leftservo position   
 	valSL = constrain( atoi(SL->valuestring), -100, 100 );
@@ -143,9 +147,9 @@ void displayParams()
 
 	// Avoid noise on servos for trying to hold position
 	// Motors should NOT be dettached though...
-	delay(1000); // wait for servo to get there
-	myservoL.detach();
-	myservoR.detach();
+	//delay(1000); // wait for servo to get there
+	//myservoL.detach();
+	//myservoR.detach();
 
 	Serial.print(" Lat: ");
 	Serial.print(latS);
@@ -183,6 +187,7 @@ void serialEvent() {
 		// so the main loop can do something about it:
 		if (inChar == '\n') {
 			stringComplete = true;
+
 		}
 	}
 }
