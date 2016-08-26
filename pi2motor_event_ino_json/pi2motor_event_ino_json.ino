@@ -16,7 +16,7 @@
 
   ##############################
   CREATED BY: Lucas Malta
-  DATE: 22 August 2016
+  DATE: 26 August 2016
 
 */
 
@@ -118,12 +118,9 @@ void displayParams()
 	aJsonObject* SR = aJson.getObjectItem(root, "sr"); 
 	aJsonObject* SL = aJson.getObjectItem(root, "sl"); 
 
-        Serial.println(SR->type);
-
-
        
         if (MR->type != aJson_Int | ML->type != aJson_Int | SR->type != aJson_Int  | SL->type != aJson_Int){
-		Serial.println("Invalid format. Expecting integer..");
+		Serial.println("Invalid type. Expecting integer..");
 		return;
 	}
 	
