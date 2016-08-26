@@ -5,7 +5,7 @@
   SR: servo on the right
   SL: servo on the left
 
-  Control sequence example: {"mr":"70", "ml":"70", "sr":"-20", "sl":"-30"}\n
+  Control sequence example: {"mr":70, "ml":60, "sr":-20, "sl":-30}\n
   The "\n" at the end is necessary so that serial knows when to stop reading.
 
   This file also continuously obtain GPS data.
@@ -117,8 +117,19 @@ void displayParams()
 	aJsonObject* ML = aJson.getObjectItem(root, "ml");
 	aJsonObject* SR = aJson.getObjectItem(root, "sr"); 
 	aJsonObject* SL = aJson.getObjectItem(root, "sl"); 
+
+        Serial.println(SR->type);
+
+
        
-	if (!MR | !ML | !SR | !SL) {
+        if (MR->type != aJson_Int | ML->type != aJson_Int | SR->type != aJson_Int  | SL->type != aJson_Int){
+		Serial.println("Invalid format. Expecting integer..");
+		return;
+	}
+	
+
+
+        if (!MR | !ML | !SR | !SL ) {
 		Serial.println("Invalid command format. Missing input?");
 		return;
 	}
@@ -129,19 +140,19 @@ void displayParams()
 	//myservoL.attach(SERVO_L_PIN); // attach left servo
 
 	//Leftservo position   
-	valSL = constrain( atoi(SL->valuestring), -100, 100 );
+	valSL = constrain( SL->valueint, -100, 100 );
 	myservoL.writeMicroseconds( map(valSL, -100, 100, MIN_SERVO_POS, MAX_SERVO_POS ) );
 
 	//Right servo position
-	valSR = constrain( atoi(SR->valuestring), -100, 100 );
+	valSR = constrain( SR->valueint, -100, 100 );
 	myservoR.writeMicroseconds( map(valSR, -100, 100, MIN_SERVO_POS, MAX_SERVO_POS ) );
 
 	//Left motor position
-	valML = constrain( atoi(ML->valuestring), 0, 100 );
+	valML = constrain( ML->valueint, 0, 100 );
 	mymotorL.writeMicroseconds( map(valML, 0, 100, MIN_MOTOR_SPD, MAX_MOTOR_SPD ) );
 
 	//Right motor position
-	valMR = constrain( atoi(MR->valuestring), 0, 100 );
+	valMR = constrain( MR->valueint, 0, 100 );
 	mymotorR.writeMicroseconds( map(valMR, 0, 100, MIN_MOTOR_SPD, MAX_MOTOR_SPD ) );
 
 
@@ -191,3 +202,4 @@ void serialEvent() {
 		}
 	}
 }
+
