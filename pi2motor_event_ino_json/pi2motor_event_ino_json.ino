@@ -11,7 +11,7 @@
   This file also continuously obtain GPS data.
 
 
-  TODO:
+  TODO: fix min/man to motor
 
 
   ##############################
@@ -68,7 +68,12 @@ void setup() {
 	myservoR.attach(SERVO_R_PIN); // attach right servo
 	myservoL.attach(SERVO_L_PIN); // attach left servo
 
-
+        // Checking attachment
+        if (!mymotorR.attached() | !mymotorL.attached() | !myservoR.attached() | !myservoL.attached()) {
+          Serial.println("ERROR: Attaching problem.");
+          return; 
+        }
+        
 	// Initialize serial:
 	Serial.begin(9600);
 	gpsSerial.begin(9600);
@@ -97,6 +102,12 @@ void loop() {
 			gps.get_position(&latS,&longW); // Get latitude and longitude
 		}
 	}
+
+        else {
+          // Set lat/long back to -1 when GPS is not available
+          latS = -1;
+          longW = -1;
+        }        
 }
 
 
@@ -109,7 +120,7 @@ void displayParams()
 
 	aJsonObject* root = aJson.parse(jsonString);
 	if(!root) {
- 		Serial.println("No control data");
+ 		Serial.println("ERROR: No control data");
 		return;
 	}
 
@@ -118,19 +129,16 @@ void displayParams()
 	aJsonObject* SR = aJson.getObjectItem(root, "sr"); 
 	aJsonObject* SL = aJson.getObjectItem(root, "sl"); 
 
-       
-        if (MR->type != aJson_Int | ML->type != aJson_Int | SR->type != aJson_Int  | SL->type != aJson_Int){
-		Serial.println("Invalid type. Expecting integer..");
-		return;
-	}
-	
-
 
         if (!MR | !ML | !SR | !SL ) {
-		Serial.println("Invalid command format. Missing input?");
+		Serial.println("ERROR: nvalid command format. Missing input?");
 		return;
 	}
-
+       
+        if (MR->type != aJson_Int | ML->type != aJson_Int | SR->type != aJson_Int  | SL->type != aJson_Int){
+		Serial.println("ERROR: Invalid type. Expecting integer..");
+		return;
+	}
 
 	// Connect to servos/motors
 	//myservoR.attach(SERVO_R_PIN); // attach right servo
