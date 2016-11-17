@@ -11,7 +11,7 @@
   This file also continuously obtain GPS data.
 
 
-  TODO: fix min/man to motor
+  TODO: fix min/max to motor
 
 
   ##############################
@@ -131,7 +131,7 @@ void displayParams()
 
 
         if (!MR | !ML | !SR | !SL ) {
-		Serial.println("ERROR: nvalid command format. Missing input?");
+		Serial.println("ERROR: Invalid command format. Missing input?");
 		return;
 	}
        
