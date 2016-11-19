@@ -89,25 +89,33 @@ while stillrunning:
     if not nextcommand == '':
         #a = yaml.safe_load(nextcommand)
         #print(a)
-        response_json = rpc.call(nextcommand)
 
-        #print(json.dumps(state))
-        b = '{"sl":'+str(state["sl"])+',"sr":'+str(state["sr"])+',"ml":'+str(state["ml"])+',"mr":'+str(state["mr"])+'}'
-        ardu.write(b + "\n")
-        print(b)
-	#sleep(1)
+        working = True
+        try:
+            response_json = rpc.call(nextcommand)
+        except:
+            working = False
 
-        #bytesToRead = ardu.inWaiting()
-        #try:
-        #    output = ardu.read(bytesToRead)
-        #except ValueError:
-        #    print 'Did not manage to read output'
-        #    continue
-        output = ardu.readline()
+        if working:
 
-	xbee.write(output)
-        xbee.write(response_json)
-        time.sleep(.2)
+            #print(json.dumps(state))
+            b = '{"sl":'+str(state["sl"])+',"sr":'+str(state["sr"])+',"ml":'+str(st$
+            ardu.write(b + "\n")
+            print(b)
+            #sleep(1)
+
+            #bytesToRead = ardu.inWaiting()
+            #try:
+            #    output = ardu.read(bytesToRead)
+            #except ValueError:
+            #    print 'Did not manage to read output'
+            #    continue
+            output = ardu.readline()
+
+            xbee.write(output)
+            xbee.write(response_json)
+            time.sleep(.2)
+>>>>>>> 9a5b1295b2bbeeeec12e79d2781b58dd40979a0b
 
 
 
