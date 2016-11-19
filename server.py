@@ -36,7 +36,7 @@ XBEE_PORT = '/dev/ttyAMA0'
 XBEE_TIMEOUT = 10
 
 ARDU_BAUD = 9600
-ARDU_PORT = '/dev/ttyACM1' # get_serial_port()
+ARDU_PORT = get_serial_port()
 ARDU_TIMEOUT = 10
 
 xbee = serial.Serial()   # open serial port
@@ -89,6 +89,7 @@ while stillrunning:
     if not nextcommand == '':
         #a = yaml.safe_load(nextcommand)
         #print(a)
+
         working = True
         try:
             response_json = rpc.call(nextcommand)
@@ -98,7 +99,7 @@ while stillrunning:
         if working:
 
             #print(json.dumps(state))
-            b = '{"sl":"'+str(state["sl"])+'","sr":"'+str(state["sr"])+'","ml":"'+str(state["ml"])+'","mr":"'+str(state["mr"])+'"}'
+            b = '{"sl":'+str(state["sl"])+',"sr":'+str(state["sr"])+',"ml":'+str(state["ml"])+',"mr":'+str(state["mr"])+'}'
             ardu.write(b + "\n")
             print(b)
             #sleep(1)
@@ -114,6 +115,7 @@ while stillrunning:
             xbee.write(output)
             xbee.write(response_json)
             time.sleep(.2)
+>>>>>>> 9a5b1295b2bbeeeec12e79d2781b58dd40979a0b
 
 
 
