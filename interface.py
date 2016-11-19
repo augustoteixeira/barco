@@ -18,10 +18,10 @@ class JsonRpc(pyjsonrpc.JsonRpc):
             state[key] = dict[key]
 
 state = {
-    'ml' : 30,
-    'mr' : 80,
-    'sl' : 40,
-    'sr' : 70
+    'ml' : 0,
+    'mr' : 0,
+    'sl' : 50,
+    'sr' : 50
 }
 
 rpc = JsonRpc()
