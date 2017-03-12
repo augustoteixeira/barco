@@ -86,7 +86,8 @@ void setup() {
 void loop() {
 	// Print the string when a newline arrives:
 	if (stringComplete) {
-		//Serial.println(inputString);
+                Serial.println("input: " );  
+		Serial.println(inputString);
 
 		// Reads data and execute command
 		displayParams();
@@ -105,8 +106,8 @@ void loop() {
 
         else {
           // Set lat/long back to -1 when GPS is not available
-          latS = -1;
-          longW = -1;
+          latS = -2;
+          longW = -2;
         }        
 }
 
@@ -167,7 +168,11 @@ void displayParams()
 	//myservoL.detach();
 	//myservoR.detach();
 
-	Serial.print(" Lat: ");
+        char buffer[1000];
+        sprintf(buffer,"{\"Lat\": %l, \"Long\": %l, \"Rservo\": %d, \"LServo\": %d, \"RMotor\": %d, \"LMotor\": %d}", latS, longW, valSR, valSL, valMR, valML);
+        Serial.print(buffer);
+
+	/*Serial.print(" Lat: ");
 	Serial.print(latS);
 	Serial.print(" Long: ");
 	Serial.print(longW);
@@ -180,7 +185,7 @@ void displayParams()
 	Serial.print(" LMotor: ");
 	Serial.print(valML);
 	Serial.print("\n");
-
+*/
 	Serial.flush(); // Wait till outgoing tx is done
         aJson.deleteItem(root);
 }

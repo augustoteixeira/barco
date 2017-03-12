@@ -50,7 +50,7 @@ color5 = pygame.Color(235,227,170)
 
 clock = pygame.time.Clock()
 
-font = pygame.font.Font('paraaminobenzoic.ttf', 20)
+font = pygame.font.Font('paraaminobenzoic.ttf', 14)
 
 height = 650
 width = 1000
@@ -139,8 +139,9 @@ while True:
     puttext(temp[-2], (50, 490))
     temp = received_buffer.split('\n')
     puttext("Last received", (30, 530))
-    puttext(temp[-3], (50, 550))
-    puttext(temp[-2], (50, 570))
+    puttext(temp[-4], (50, 550))
+    puttext(temp[-3], (50, 570))
+    puttext(temp[-2], (50, 590))
 
     putangle("Servo E", state['sl'], 100, 150)
     putangle("Servo D", state['sr'], 250, 150)

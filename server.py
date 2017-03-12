@@ -101,7 +101,8 @@ while stillrunning:
         if working:
 
             #print(json.dumps(state))
-            b = '{"sl":'+str(state["sl"])+',"sr":'+str(state["sr"])+',"ml":'+str(state["ml"])+',"mr":'+str(state["mr"])+'}'
+            b = ('{"sl":'+str(state["sl"])+',"sr":'+str(state["sr"])
+                 + ',"ml":'+str(state["ml"])+',"mr":'+str(state["mr"])+'}')
             ardu.write(b + "\n")
             print(b)
             #sleep(1)
