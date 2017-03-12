@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import os
 import json
 import yaml
@@ -115,8 +117,6 @@ while stillrunning:
             xbee.write(output)
             xbee.write(response_json)
             time.sleep(.2)
->>>>>>> 9a5b1295b2bbeeeec12e79d2781b58dd40979a0b
-
 
 
 xbee.close()             # close port
