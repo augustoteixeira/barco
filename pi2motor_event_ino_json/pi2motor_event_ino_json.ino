@@ -86,8 +86,8 @@ void setup() {
 void loop() {
 	// Print the string when a newline arrives:
 	if (stringComplete) {
-                Serial.println("input: " );  
-		Serial.println(inputString);
+                //Serial.println("input: " );  
+		//Serial.println(inputString);
 
 		// Reads data and execute command
 		displayParams();
@@ -121,6 +121,7 @@ void displayParams()
 
 	aJsonObject* root = aJson.parse(jsonString);
 	if(!root) {
+   		Serial.println(jsonString);
  		Serial.println("ERROR: No control data");
 		return;
 	}
@@ -166,26 +167,23 @@ void displayParams()
 	// Motors should NOT be dettached though...
 	//delay(1000); // wait for servo to get there
 	//myservoL.detach();
-	//myservoR.detach();
+	//myservoR.detach();       
 
-        char buffer[1000];
-        sprintf(buffer,"{\"Lat\": %l, \"Long\": %l, \"Rservo\": %d, \"LServo\": %d, \"RMotor\": %d, \"LMotor\": %d}", latS, longW, valSR, valSL, valMR, valML);
-        Serial.print(buffer);
-
-	/*Serial.print(" Lat: ");
+        Serial.print("{\"Lat\":");
 	Serial.print(latS);
-	Serial.print(" Long: ");
+	Serial.print(", \"Long\":");
 	Serial.print(longW);
-	Serial.print(" RServo: ");
+	Serial.print(", \"RServo\":");
 	Serial.print(valSR);
-	Serial.print(" LServo: ");
+	Serial.print(", \"LServo\":");
 	Serial.print(valSL);
-	Serial.print(" RMotor: ");
+	Serial.print(", \"RMotor\":");
 	Serial.print(valMR);
-	Serial.print(" LMotor: ");
+	Serial.print(", \"LMotor\":");
 	Serial.print(valML);
+	Serial.print("}");
 	Serial.print("\n");
-*/
+
 	Serial.flush(); // Wait till outgoing tx is done
         aJson.deleteItem(root);
 }
